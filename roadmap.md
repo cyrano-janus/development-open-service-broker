@@ -1,11 +1,12 @@
-# 🚀 OSB Broker Roadmap v2.2
+# 🚀 OSB Broker Roadmap v2.3
 
 > **Roadmap für den Go OSB Broker** — Zielbild: **Generischer Service Broker für
 > Kubernetes-Operatoren in Enterprise-Umgebungen**
 >
-> Stand: 24. August 2026 · Ersetzt v1/v2 · **Phase 1 + 2 (Go) ABGESCHLOSSEN**
+> Stand: 24. August 2026 · Ersetzt v1/v2/v2.2 · **Phase 1 + 2 + 3 (Go) ABGESCHLOSSEN**
 > Referenz-Implementierung: [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go)
-> (`main @ 44f979c`, OSB 2.17, bei Korifi E2E-verifiziert inkl. echtem CNPG-PostgreSQL)
+> (`main @ b8194ef`, OSB 2.17, bei Korifi E2E-verifiziert inkl. echtem CNPG-PostgreSQL
+> und Live-Planwechsel)
 
 ---
 
@@ -153,16 +154,39 @@ VCAP_SERVICES in der App
 
 ---
 
-## 🟢 Phase 3: Definition Catalog & Second-Day (Q1/Q2 2027) — NÄCHSTER SCHRITT
+## 🟢 Phase 3: Definition Catalog & Second-Day — ✅ ABGESCHLOSSEN (24.08.2026)
 
 Ersatz für v1-Phase 5 — dieselben Dienste, aber als YAML:
 
-| # | Feature | Beschreibung |
-|---|---------|--------------|
-| 3.1 | **Catalog-Repo** | `definitions/` mit Beispielen: CNPG (✅ vorhanden), Redis-Operator, MinIO |
-| 3.2 | **Update-Logik final** | Plan-Wechsel → CR-Patch verifizieren; Parameter-Validierung per JSON-Schema pro Plan |
-| 3.3 | **Credential Rotation** | Unbind/Rebind liest Secrets frisch; optional Auto-Rotation-Annotation |
-| 3.4 | **Instance Sharing (optional)** | OSB-Feature „shared": Bindings über Space-Grenzen, RBAC-geprüft |
+| # | Feature | Status | Details |
+|---|---------|--------|---------|
+| 3.1 | **Catalog-Repo** | ✅ | `definitions/`: CNPG (✅), Redis-Operator (Opstree, dev/prod), MinIO (Tenant, small/large erasure-coded); Catalog-Guard-Test verhindert Definition-Drift |
+| 3.2 | **Update-Logik** | ✅ | Plan-Wechsel → Template re-render → ApplyCR; **No-op-Erkennung** (identisches Spec+Labels = kein Apply, kein resourceVersion-Bump); `allowedParameters`-Whitelist pro Plan, unbekannte Parameter → 400 |
+| 3.3 | **Credential Rotation** | ✅ | Integrationstest: Rebind liest rotiertes Secret frisch (kein Caching); Key-Filter pro Definition |
+| 3.4 | **Instance Sharing** | ⏭️ Vertagt | OSB-Feature „shared" — Bedarf im Enterprise-Kontext gering, Aufwand hoch; Re-Evaluierung mit Phase 4 |
+
+**E2E-Beweis M3 (direkt gegen den Broker):** `PATCH` small→large auf die
+live-provisionierte CNPG-Instanz skalierte den Cluster **1 → 3 Instanzen**,
+beide Replicas streaming, `psql` erfolgreich. Reverse-Richtung liefert
+sauberen Fehler (CNPG verhindert PVC-Schrumpfung — korrektes Operator-
+Verhalten). Zusätzlich zwei Produktions-Bugs gefunden und gefixt:
+CNPG-Webhook lehnt bare-GUID-Namen ab (`safeName` mit immer `osb-`-Präfix)
+und Kind-StorageClass ohne Volume-Expansion blockierte Reconciles.
+
+---
+
+## ⚠️ Bekannte Plattform-Limitation: Korifi v0.18.0 (OSB-Update-Pfad)
+
+Bei der Verifikation des Update-Flows über Cloud Foundry wurde eine
+**Korifi-seitige Lücke** identifiziert (kein Broker-Fehler):
+
+| Aspekt | Beobachtung |
+|--------|-------------|
+| Symptom | `cf update-service -p <plan>` zeigt „OK", aber der Broker erhält **niemals** den OSB-`PATCH`-Call |
+| Ursache | Der CFServiceInstance-Controller v0.18.0 scheitert beim Lesen des Parameters-Secrets (`parameters: null` statt `{}`) und beendet den Reconcile, bevor der OSB-Update-Call ausgeführt wird |
+| Isolation | Direkter OSB-PATCH gegen denselben Broker/dieselbe Instanz funktioniert vollständig (siehe M3-Beweis); Provision/Bind/LastOperation laufen auch über Korifi einwandfrei |
+| Workaround | Updates direkt per OSB-PATCH auslösen (Skripte/Terraform) oder auf Korifi ≥ neuere Version upgraden |
+| Status | Dokumentiert als Plattform-Limitation; Broker-seitig nichts zu tun. Re-Test bei nächstem Korifi-Upgrade |
 
 ---
 
@@ -199,9 +223,12 @@ Erkenntnissen aus Catalog + Update-Praxis.
 |-------------|--------|------------------|
 | **M1: Hardened Reference (Go)** | Phase 1 komplett | ✅ **Abgeschlossen 24.08.2026** |
 | **M2: Generic Engine (Go)** | Phase 2 komplett, CNPG E2E bewiesen | ✅ **Abgeschlossen 24.08.2026** |
-| **M3: Catalog & Second-Day** | Phase 3, drei Operator-Beispiele | Q1–Q2 2027 (nächster Schritt) |
-| **M1a/M2a: Java-Nachzug** | Phase 1+2 im Java-Broker | 🔴 Offen — Start empfohlen nach M3 |
+| **M3: Catalog & Second-Day** | Phase 3, Update-E2E direkt gegen Broker bewiesen | ✅ **Abgeschlossen 24.08.2026** |
+| **M1a/M2a: Java-Nachzug** | Phase 1+2 im Java-Broker | 🔴 Offen — jetzt startklar (Go-Design stabil) |
 | **M4: Enterprise Release** | Phase 4, Helm + CI mit Checker-Gate | Q3 2027 |
+
+> **Korifi-Hinweis:** v0.18.0 leitet OSB-Update-PATCHes nicht weiter —
+> siehe „Bekannte Plattform-Limitation" oben.
 
 ---
 
