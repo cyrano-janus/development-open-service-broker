@@ -1,10 +1,40 @@
-# 🚀 OSB Broker Roadmap v2
+# 🚀 OSB Broker Roadmap v2.1
 
-> **Roadmap für Go OSB Broker** — Zielbild: **Generischer Service Broker für
+> **Roadmap für den Go OSB Broker** — Zielbild: **Generischer Service Broker für
 > Kubernetes-Operatoren in Enterprise-Umgebungen**
 >
-> Stand: August 2026 · Ersetzt Roadmap v1 (vom August 2026)
-> Basis: [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go) (OSB 2.17, bei Korifi verifiziert)
+> Stand: 24. August 2026 · Ersetzt v1 (August 2026) und aktualisiert v2
+> Referenz-Implementierung: [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go)
+> (Branch `feat/k8s-state-store`, OSB 2.17, bei Korifi verifiziert)
+
+---
+
+## ✅ Status: Phase 1 ABGESCHLOSSEN (Go, 24.08.2026)
+
+Meilenstein **M1 „Hardened Reference"** ist für die Go-Referenz erreicht — alle
+vier Phase-1-Features sind implementiert, getestet und im Cluster verifiziert:
+
+| # | Feature | Status | Details |
+|---|---------|--------|---------|
+| 1.1 | **K8s-native Persistenz** | ✅ Erledigt (Go) | `StateStore`-Interface; `K8sStateStore` persistiert Instances/Bindings als JSON in ConfigMap `osb-broker-state`; Restart-E2E im Cluster bewiesen (Pod gekillt → Instanz + Binding überlebt) |
+| 1.2 | **Basic Auth** | ✅ Erledigt (Go) | Middleware mit konstantzeitvergleichen Creds (`crypto/subtle`), 401 + `WWW-Authenticate`, `/healthz` ausgenommen, Creds via Secret (`BROKER_AUTH_USER/PASSWORD`) |
+| 1.3 | **Structured Logging** | ✅ Erledigt (Go) | JSON-Logs pro Request mit UUID-Correlation-ID (`X-Correlation-ID`, inbound honoured), `X-OSB-Originating-Identity` im Logline für Audit |
+| 1.4 | **Error Handling** | ✅ Erledigt (Go) | Zentrales `respondOSBError`: DELETE auf Nichtexistentes → 410 Gone (OSB-Spec), unknown service/plan → 400, Konflikte → 409 |
+
+Zusätzlich erledigt und verifiziert: OSB-2.17-Vollzyklus, Registrierung bei
+Korifi inkl. Marketplace-Sichtbarkeit und Service-Key-Lifecycle, `/healthz`
+mit K8s-Probes, distroless-Dockerfile, RBAC least-privilege (Role scoped auf
+die State-ConfigMap via `resourceNames`).
+
+---
+
+## 📊 Projektstatus je Implementierung
+
+| Komponente | Repository | Stand |
+|------------|-----------|-------|
+| **Go Reference Broker** | [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go) | 🟢 **Phase 1 komplett** (siehe oben), Detaildoku im Repo-README |
+| **Java Reference Broker** | [`osb-broker-java`](https://github.com/cyrano-janus/osb-broker-java) | 🔴 **Offen** — noch keine Phase-1-Umsetzung (Persistenz, Auth, Logging, Error-Mapping stehen aus); Start empfohlen nach M2-Review der Go-Ergebnisse |
+| **OSB Checker** | [`osb-checker`](./osb-checker) | Geplant als Conformance-Gate in CI (Phase 4.2) |
 
 ---
 
@@ -27,15 +57,15 @@ Ein einziger, gehärteter Broker-Prozess rendert deklarative
 **ServiceDefinitions** auf Kubernetes-CustomResources beliebiger Operatoren.
 Neuer Service im Marketplace = eine YAML-Datei, kein Code, kein Deployment.
 
-### Was bleibt aus v1?
+### Was blieb aus v1 und wie wurde es gelöst?
 
-| v1-Phase | Urteil in v2 |
-|----------|--------------|
-| Phase 1 Production Basics | ✅ übernommen — Persistenz aber K8s-nativ statt SQL |
-| Phase 2 Second-Day Operations | ✅ übernommen — als Teil der Generic Engine |
-| Phase 3 Advanced Features | ✅ größtenteils übernommen; „Async Queue" entfällt (Operatoren sind selbst asynchron; der Broker pollt CR-Status) |
-| Phase 4 Deployment & Ops | ⚡ teils erledigt (Dockerfile, K8s-Manifests, Probes); Rest: Helm, CI |
-| Phase 5 Echte Services | ❌ ersetzt durch **Definition Catalog** (YAML statt Code) |
+| v1-Phase | Urteil in v2 | Umsetzung Go |
+|----------|--------------|--------------|
+| Phase 1 Production Basics | ✅ übernommen — Persistenz K8s-nativ statt SQL | ✅ ConfigMap-StateStore |
+| Phase 2 Second-Day Operations | ✅ übernommen — als Teil der Generic Engine | offen (Phase 2) |
+| Phase 3 Advanced Features | ✅ größtenteils; „Async Queue" entfällt | offen (Phase 3) |
+| Phase 4 Deployment & Ops | ⚡ teils vorgezogen | Dockerfile, Manifests, Probes, RBAC ✅ |
+| Phase 5 Echte Services | ❌ ersetzt durch Definition Catalog | entfällt |
 
 ---
 
@@ -117,24 +147,7 @@ VCAP_SERVICES in der App
 
 ---
 
-## 🔵 Phase 1: Production Basics (Q4 2026)
-
-Ziel: Der Broker selbst ist betriebssicher — **ohne Abhängigkeit von einem
-externen Service-Deployment** (bewusst kein SQL/Redis als Broker-Store).
-
-| # | Feature | Umsetzung | Aufwand |
-|---|---------|-----------|---------|
-| 1.1 | **K8s-native Persistenz** | Instances/Bindings als eigene CRDs (`OSBInstance`, `OSBBinding`) oder annotierte Objekte im Broker-Namespace. Pod-Restart-safe, keine externe DB | Mittel |
-| 1.2 | **Basic Auth** | Credentials aus Kubernetes-Secret; 401 + WWW-Authenticate; Brute-force-Delay. Vorbereitet für OAuth2/OIDC später | Einfach |
-| 1.3 | **Structured Logging** | JSON-Logs, Correlation-ID pro Request, Auswertung von `X-OSB-Originating-Identity` (Audit: *wer* hat *was* angelegt) | Einfach |
-| 1.4 | **Error Handling** | Zentrale OSB-Fehler-Mapping-Schicht (400/409/410/422 korrekt je Fall), einheitliche Response-Struktur | Einfach |
-
-Akzeptanzkriterium: Pod-Restart verliert keine Instance/Binding; alle
-Endpoints verhalten sich spec-konform ohne Header-Basteln.
-
----
-
-## 🟢 Phase 2: Generic Engine (Q1 2027)
+## 🟢 Phase 2: Generic Engine (Q1 2027) — NÄCHSTER SCHRITT
 
 Ziel: YAML statt Code — der Kern des Generik.
 
@@ -145,7 +158,7 @@ Ziel: YAML statt Code — der Kern des Generik.
 | 2.3 | **CR-Lifecycle** | Provision = CR apply, Deprovision = CR delete, Update = CR patch (Plan-Wechsel!) | Mittel |
 | 2.4 | **Readiness-Polling** | JSONPath auf CR-Status → LastOperation-Mapping inkl. Timeout/Failure-Erkennung | Einfach |
 | 2.5 | **Binding-Extraktion** | Secret-Referenz rendern, Felder filtern/mappen, Rotation-fähig (Bind erneut = frisches Lesen) | Einfach |
-| 2.6 | **RBAC-scoped ServiceAccount** | Broker darf nur in Space-Namespaces schreiben (Least Privilege, Enterprise-Pflicht) | Einfach |
+| 2.6 | **RBAC-scoped ServiceAccount** | Erweiterung des bestehenden least-privilege-Role auf Space-Namespaces | Einfach |
 
 Erster End-to-End: **CNPG-Definition** gegen Korifi (`cf create-service`
 erzeugt echten PostgreSQL-Cluster).
@@ -179,23 +192,13 @@ Ersatz für v1-Phase 5 — dieselben Dienste, aber als YAML:
 
 ## 📅 Meilensteine
 
-| Meilenstein | Inhalt | Geplant |
-|-------------|--------|---------|
-| **M1: Hardened Reference** | Phase 1 komplett (persistenter, authentifizierter, beobachtbarer Broker) | Q4 2026 |
-| **M2: Generic Engine** | Phase 2, erster echter CNPG-Service über YAML | Q1 2027 |
+| Meilenstein | Inhalt | Status / geplant |
+|-------------|--------|------------------|
+| **M1: Hardened Reference (Go)** | Phase 1 komplett | ✅ **Abgeschlossen 24.08.2026** |
+| **M1a: Hardened Reference (Java)** | Phase 1 im Java-Broker nachziehen | 🔴 Offen — Start nach M2-Retrospektive empfohlen |
+| **M2: Generic Engine** | Phase 2, erster echter CNPG-Service über YAML | Q1 2027 (nächster Schritt) |
 | **M3: Catalog & Second-Day** | Phase 3, drei Operator-Beispiele | Q2 2027 |
 | **M4: Enterprise Release** | Phase 4, Helm + CI mit Checker-Gate | Q3 2027 |
-
----
-
-## ✅ Bereits erledigt (aus v1/v2, Stand August 2026)
-
-- ✅ OSB-2.17-Lebenszyklus vollständig (catalog/provision/bind/lastop/unbind/deprovision)
-- ✅ Bei Korifi registriert und verifiziert (Marketplace, create-service, Service-Keys)
-- ✅ `/healthz`-Endpoint + K8s-Probes
-- ✅ Dockerfile (distroless, nonroot), Deployment-/Service-Manifests
-- ✅ go vet clean, Test-Suite grün
-- ✅ Binding-Schutz (Deprovision mit offenen Bindings → 410)
 
 ---
 
@@ -209,7 +212,7 @@ mit Test reicht völlig, um das Angebot zu erweitern.
 
 ## 🌟 Vision
 
-> *"Ein Plattform-Team legt eine YAML-Datei in Git — und ab sofort kann jeder
+> *„Ein Plattform-Team legt eine YAML-Datei in Git — und ab sofort kann jeder
 > Entwickler `cf create-service` für diesen Dienst nutzen. Keine Tickets,
 > keine Broker-Entwicklung, volle Governance."*
 
