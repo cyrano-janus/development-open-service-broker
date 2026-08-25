@@ -159,7 +159,7 @@ Ersatz für v1-Phase 5 — dieselben Dienste, aber als YAML:
 
 | # | Feature | Status | Details |
 |---|---------|--------|---------|
-| 3.1 | **Catalog-Repo** | ✅ | `definitions/`: CNPG (✅), Redis-Operator (Opstree, dev/prod), MinIO (Tenant, small/large erasure-coded); Catalog-Guard-Test verhindert Definition-Drift |
+| 3.1 | **Catalog-Repo** | ✅ | `definitions/` (7 Stück): CNPG, Redis, MinIO, Valkey, RabbitMQ, Redpanda, SeaweedFS; Catalog-Guard-Test verhindert Definition-Drift. **E2E über Korifi (25.08.):** RabbitMQ ✅ und SeaweedFS ✅ (create succeeded, Ready=True, Service-Key mit echten Credentials). Valkey 🔴 blockiert (hyperspike-Operator braucht bitnami/bash-Images), Redpanda 🔴 blockiert (Operator 26.x = Helm-Wrapper ohne Spec-Felder → braucht 4.6) |
 | 3.2 | **Update-Logik** | ✅ | Plan-Wechsel → Template re-render → ApplyCR; **No-op-Erkennung** (identisches Spec+Labels = kein Apply, kein resourceVersion-Bump); `allowedParameters`-Whitelist pro Plan, unbekannte Parameter → 400 |
 | 3.3 | **Credential Rotation** | ✅ | Integrationstest: Rebind liest rotiertes Secret frisch (kein Caching); Key-Filter pro Definition |
 | 3.4 | **Instance Sharing** | ⏭️ Vertagt | OSB-Feature „shared" — Bedarf im Enterprise-Kontext gering, Aufwand hoch; Re-Evaluierung mit Phase 4 |
