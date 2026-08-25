@@ -198,6 +198,7 @@ Bei der Verifikation des Update-Flows über Cloud Foundry wurde eine
 | 4.3 | **Metrics** | 🔴 Offen | Prometheus: Request-Latenzen, Provision-Dauer, aktive Instanzen, Fehlerquoten |
 | 4.4 | **OpenAPI-Doku** | ✅ **Abgeschlossen 25.08.2026** | Vollständige OpenAPI-3.0.3-Spec (alle 11 Router-Operationen, deckungsgleich mit dem Gin-Router verifiziert) + ServiceDefinition-JSON-Schema (Draft-07, gegen alle shipped Definitions geprüft). Selbst-Hosted: `GET /openapi.yaml` und `GET /schemas/service-definition.schema.json`, unauthentifiziert, zur Compile-Zeit via go:embed eingebettet — das Binary dokumentiert sich selbst. 3 Handler-Tests schützen die Doku-Routen |
 | 4.5 | **mTLS/OAuth2 (optional)** | ⏭️ Vertagt | Für Umgebungen ohne NetworkPolicy-Isolation; nur bei konkretem Bedarf |
+| **4.6** | **Engine: Multi-Doc-Templates** | 🔴 Offen (nächste Engine-Erweiterung) | `provision.template` auf mehrere durch `---` getrennte Manifeste erweitern — schaltet Strimzi-Kafka (KafkaNodePool + Kafka), RocketMQ und Dgraph als Angebote frei. Details: README „Nächste Schritte" im Broker-Repo. Voraussetzung für die nächsten Catalog-Erweiterungen |
 
 ---
 
@@ -225,7 +226,7 @@ Erkenntnissen aus Catalog + Update-Praxis.
 | **M3: Catalog & Second-Day** | Phase 3, Update-E2E direkt gegen Broker bewiesen | ✅ **Abgeschlossen 24.08.2026** |
 | **M4a: CI/CD + Conformance-Gate** | Phase 4.2, Pipeline grün auf main | ✅ **Abgeschlossen 25.08.2026** |
 | **M1a/M2a: Java-Nachzug** | Phase 1+2 im Java-Broker (siehe „Java-Nachzug") | 🔴 Offen — jetzt startklar (Go-Design stabil) |
-| **M4b: Enterprise Release** | Helm Chart (✅), OpenAPI-Doku (✅), Metrics | 🔴 Teils offen — nur 4.3 Metrics |
+| **M4b: Enterprise Release** | Helm Chart (✅), OpenAPI-Doku (✅), Metrics | 🔴 Teils offen — 4.3 Metrics + 4.6 Multi-Doc-Templates |
 
 > **Korifi-Hinweis:** v0.18.0 leitet OSB-Update-PATCHes nicht weiter —
 > siehe „Bekannte Plattform-Limitation" oben.
