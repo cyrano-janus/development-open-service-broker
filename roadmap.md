@@ -1,12 +1,11 @@
-# 🚀 OSB Broker Roadmap v2.3
+# 🚀 OSB Broker Roadmap v2.4
 
 > **Roadmap für den Go OSB Broker** — Zielbild: **Generischer Service Broker für
 > Kubernetes-Operatoren in Enterprise-Umgebungen**
 >
-> Stand: 24. August 2026 · Ersetzt v1/v2/v2.2 · **Phase 1 + 2 + 3 (Go) ABGESCHLOSSEN**
+> Stand: 25. August 2026 · Ersetzt v1–v2.3 · **Phase 1 + 2 + 3 + 4.2 (Go) ABGESCHLOSSEN**
 > Referenz-Implementierung: [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go)
-> (`main @ b8194ef`, OSB 2.17, bei Korifi E2E-verifiziert inkl. echtem CNPG-PostgreSQL
-> und Live-Planwechsel)
+> (`main @ a14bed1`, OSB 2.17, CI mit Conformance-Gate grün)
 
 ---
 
@@ -192,13 +191,13 @@ Bei der Verifikation des Update-Flows über Cloud Foundry wurde eine
 
 ## 🟣 Phase 4: Enterprise Operations (Q3 2027)
 
-| # | Feature | Beschreibung | Aufwand |
-|---|---------|--------------|---------|
-| 4.1 | **Helm Chart** | Values: Definitions-Quelle, Auth-Secret, RBAC, Namespace-Selektoren | Mittel |
-| 4.2 | **CI/CD** | GitHub Actions: vet/test/build/image; **Conformance-Gate: eigener osb-checker** läuft gegen jeden PR-Build | Mittel |
-| 4.3 | **Metrics** | Prometheus: Request-Latenzen, Provision-Dauer, aktive Instanzen, Fehlerquoten | Mittel |
-| 4.4 | **OpenAPI-Doku** | Broker-Endpoints + ServiceDefinition-Schema dokumentiert | Einfach |
-| 4.5 | **mTLS/OAuth2 (optional)** | Für Umgebungen ohne NetworkPolicy-Isolation | Hoch |
+| # | Feature | Status | Details |
+|---|---------|--------|---------|
+| 4.1 | **Helm Chart** | 🔴 Offen | Values: Definitions-Quelle, Auth-Secret, RBAC, Namespace-Selektoren |
+| 4.2 | **CI/CD + Conformance-Gate** | ✅ **Abgeschlossen 25.08.2026** | Drei-Level GitHub Actions: L1 vet/test-race/build (~30s) → L2 Conformance-Gate: ephemeral kind-Cluster + CNPG + Broker aus dem PR, geprüft vom eigenen `osb-checker`-Tool (Auth, Catalog-Shape, Lifecycle inkl. 410-Gone, Error-Mapping; ~3 min) → L3 Release bei Tags (Multi-Arch nach GHCR + GitHub Release). Free-Tier-tauglich (Public Repo gratis). Der Gate hat sofort gelohnt: `.gitignore`-Bug entdeckt (internal/broker war nie committed) und 410-Gone-Lücke im Definition-Deprovision gefunden |
+| 4.3 | **Metrics** | 🔴 Offen | Prometheus: Request-Latenzen, Provision-Dauer, aktive Instanzen, Fehlerquoten |
+| 4.4 | **OpenAPI-Doku** | 🔴 Offen | Broker-Endpoints + ServiceDefinition-Schema dokumentiert |
+| 4.5 | **mTLS/OAuth2 (optional)** | ⏭️ Vertagt | Für Umgebungen ohne NetworkPolicy-Isolation; nur bei konkretem Bedarf |
 
 ---
 
@@ -224,8 +223,9 @@ Erkenntnissen aus Catalog + Update-Praxis.
 | **M1: Hardened Reference (Go)** | Phase 1 komplett | ✅ **Abgeschlossen 24.08.2026** |
 | **M2: Generic Engine (Go)** | Phase 2 komplett, CNPG E2E bewiesen | ✅ **Abgeschlossen 24.08.2026** |
 | **M3: Catalog & Second-Day** | Phase 3, Update-E2E direkt gegen Broker bewiesen | ✅ **Abgeschlossen 24.08.2026** |
+| **M4a: CI/CD + Conformance-Gate** | Phase 4.2, Pipeline grün auf main | ✅ **Abgeschlossen 25.08.2026** |
 | **M1a/M2a: Java-Nachzug** | Phase 1+2 im Java-Broker | 🔴 Offen — jetzt startklar (Go-Design stabil) |
-| **M4: Enterprise Release** | Phase 4, Helm + CI mit Checker-Gate | Q3 2027 |
+| **M4b: Enterprise Release** | Helm Chart, Metrics, OpenAPI-Doku | Q3 2027 |
 
 > **Korifi-Hinweis:** v0.18.0 leitet OSB-Update-PATCHes nicht weiter —
 > siehe „Bekannte Plattform-Limitation" oben.
