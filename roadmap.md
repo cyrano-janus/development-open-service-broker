@@ -196,7 +196,7 @@ Bei der Verifikation des Update-Flows über Cloud Foundry wurde eine
 | 4.1 | **Helm Chart** | ✅ **Abgeschlossen 25.08.2026** | Chart unter `deploy/helm/`: Deployment/Service/RBAC (namespaced State-Role + ClusterRole nur für Operator-CRs), Auth-Secret (create oder existingSecret), Definitions-ConfigMap aus Values. Verifiziert mit `helm lint` + 16 Render-Checks über drei Szenarien (Default ohne Definitions-Dateien, kind-Values mit 4 gebündelten Definitionen, existingSecret-Pfad). Bug gefunden & gefixt: Mount auf nicht existierende ConfigMap bei `create=true` ohne `files` |
 | 4.2 | **CI/CD + Conformance-Gate** | ✅ **Abgeschlossen 25.08.2026** | Drei-Level GitHub Actions: L1 vet/test-race/build (~30s) → L2 Conformance-Gate: ephemeral kind-Cluster + CNPG + Broker aus dem PR, geprüft vom eigenen `osb-checker`-Tool (Auth, Catalog-Shape, Lifecycle inkl. 410-Gone, Error-Mapping; ~3 min) → L3 Release bei Tags (Multi-Arch nach GHCR + GitHub Release). Free-Tier-tauglich (Public Repo gratis). Der Gate hat sofort gelohnt: `.gitignore`-Bug entdeckt (internal/broker war nie committed) und 410-Gone-Lücke im Definition-Deprovision gefunden |
 | 4.3 | **Metrics** | 🔴 Offen | Prometheus: Request-Latenzen, Provision-Dauer, aktive Instanzen, Fehlerquoten |
-| 4.4 | **OpenAPI-Doku** | 🔴 Offen | Broker-Endpoints + ServiceDefinition-Schema dokumentiert |
+| 4.4 | **OpenAPI-Doku** | ✅ **Abgeschlossen 25.08.2026** | Vollständige OpenAPI-3.0.3-Spec (alle 11 Router-Operationen, deckungsgleich mit dem Gin-Router verifiziert) + ServiceDefinition-JSON-Schema (Draft-07, gegen alle shipped Definitions geprüft). Selbst-Hosted: `GET /openapi.yaml` und `GET /schemas/service-definition.schema.json`, unauthentifiziert, zur Compile-Zeit via go:embed eingebettet — das Binary dokumentiert sich selbst. 3 Handler-Tests schützen die Doku-Routen |
 | 4.5 | **mTLS/OAuth2 (optional)** | ⏭️ Vertagt | Für Umgebungen ohne NetworkPolicy-Isolation; nur bei konkretem Bedarf |
 
 ---
@@ -225,7 +225,7 @@ Erkenntnissen aus Catalog + Update-Praxis.
 | **M3: Catalog & Second-Day** | Phase 3, Update-E2E direkt gegen Broker bewiesen | ✅ **Abgeschlossen 24.08.2026** |
 | **M4a: CI/CD + Conformance-Gate** | Phase 4.2, Pipeline grün auf main | ✅ **Abgeschlossen 25.08.2026** |
 | **M1a/M2a: Java-Nachzug** | Phase 1+2 im Java-Broker (siehe „Java-Nachzug") | 🔴 Offen — jetzt startklar (Go-Design stabil) |
-| **M4b: Enterprise Release** | Helm Chart (✅ 25.08.2026), Metrics, OpenAPI-Doku | 🔴 Teils offen |
+| **M4b: Enterprise Release** | Helm Chart (✅), OpenAPI-Doku (✅), Metrics | 🔴 Teils offen — nur 4.3 Metrics |
 
 > **Korifi-Hinweis:** v0.18.0 leitet OSB-Update-PATCHes nicht weiter —
 > siehe „Bekannte Plattform-Limitation" oben.
