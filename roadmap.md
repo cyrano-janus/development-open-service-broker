@@ -38,7 +38,7 @@ Operator-Secret `<id>-app` als Service-Key ausgeliefert.
 
 | Komponente | Repository | Stand |
 |------------|-----------|-------|
-| **Go Reference Broker** | [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go) | 🟢 **Phase 1 + 2 komplett** (auf `main`, 84 Tests grün); Detaildoku im Repo-README |
+| **Go Reference Broker** | [`osb-broker-go`](https://github.com/cyrano-janus/osb-broker-go) | 🟢 **Phase 1+2+3+4.1/4.2/4.4 komplett** (`~/DEV/osb-broker-go`, main @ 8e325e7, 97 Tests grün); Detaildoku im Repo-README |
 | **Java Reference Broker** | [`osb-broker-java`](https://github.com/cyrano-janus/osb-broker-java) | 🔴 **Offen** — Phase 1 (Persistenz, Auth, Logging, Error-Mapping) und Phase 2 (Generic Engine) stehen noch aus; Start empfohlen nach M3-Retrospektive der Go-Ergebnisse |
 | **OSB Checker** | [`osb-checker`](./osb-checker) | Geplant als Conformance-Gate in CI (Phase 4.2) |
 
