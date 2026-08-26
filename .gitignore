@@ -1,0 +1,5 @@
+# Eigene Git-Repos als Unterverzeichnisse (Multi-Repo-Layout).
+# Jedes Sub-Repo hat sein eigenes .git — hier NICHT mitschieben.
+/osb-broker-go/
+/osb-broker-java/
+/osb-checker/
