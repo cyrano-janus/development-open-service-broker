@@ -198,7 +198,7 @@ Bei der Verifikation des Update-Flows über Cloud Foundry wurde eine
 | 4.3 | **Metrics** | ✅ **Abgeschlossen 26.08.2026** | Prometheus-Metriken via client_golang (eigene Registry): `osb_requests_total` + Latenz-Histogramm mit **Low-Cardinality Routen-Templates** (nie Instanz-IDs), Business-Counter (provision/bind/unbind/deprovision mit reason=ok\|gone\|error, last_operation nach State). `GET /metrics` unauthentifiziert (scrape-intern wie /healthz); `METRICS_ENABLED=0` deaktiviert. Middleware VOR Auth → auch 401s sichtbar. Helm: `metrics.enabled`. Live im kind verifiziert; 5 neue Tests inkl. Cardinality-Leak-Check |
 | 4.4 | **OpenAPI-Doku** | ✅ **Abgeschlossen 25.08.2026** | Vollständige OpenAPI-3.0.3-Spec (alle 11 Router-Operationen, deckungsgleich mit dem Gin-Router verifiziert) + ServiceDefinition-JSON-Schema (Draft-07, gegen alle shipped Definitions geprüft). Selbst-Hosted: `GET /openapi.yaml` und `GET /schemas/service-definition.schema.json`, unauthentifiziert, zur Compile-Zeit via go:embed eingebettet — das Binary dokumentiert sich selbst. 3 Handler-Tests schützen die Doku-Routen |
 | 4.5 | **mTLS/OAuth2 (optional)** | ⏭️ Vertagt | Für Umgebungen ohne NetworkPolicy-Isolation; nur bei konkretem Bedarf |
-| **4.6** | **Engine: Multi-Doc-Templates** | 🔴 Offen (nächste Engine-Erweiterung) | `provision.template` auf mehrere durch `---` getrennte Manifeste erweitern — schaltet Strimzi-Kafka (KafkaNodePool + Kafka), RocketMQ und Dgraph als Angebote frei. Details: README „Nächste Schritte" im Broker-Repo. Voraussetzung für die nächsten Catalog-Erweiterungen |
+|| **4.6** | **Engine: Multi-Doc-Templates** | ✅ **Abgeschlossen 26.08.2026** | Templates mit `---` Trenner → mehrere K8s-Objekte pro Instanz. `SplitManifests` / `ApplyManifests` / `DeleteManifestsByNames` im Operator-Client. Engine trackt `AppliedObjects` pro Instanz → Deprovision räumt alle Objekte ab. Update mit No-Op-Erkennung via `crMatchesRendered` (JSON-Round-Trip-Vergleich spec+labels). Definition-Beispiele: Multidoc-Engine-Tests mit 2 ConfigMaps (primary+replica). 3 neue Tests (Provision/Deprovision/Record-Carries-Objects) + Legacy-Single-Doc-Pfad bleibt kompatibel. Live im kind verifiziert (21/21 Checker-Tests) |
 
 ---
 
@@ -226,7 +226,7 @@ Erkenntnissen aus Catalog + Update-Praxis.
 | **M3: Catalog & Second-Day** | Phase 3, Update-E2E direkt gegen Broker bewiesen | ✅ **Abgeschlossen 24.08.2026** |
 | **M4a: CI/CD + Conformance-Gate** | Phase 4.2, Pipeline grün auf main | ✅ **Abgeschlossen 25.08.2026** |
 | **M1a/M2a: Java-Nachzug** | Phase 1+2 im Java-Broker (siehe „Java-Nachzug") | 🔴 Offen — jetzt startklar (Go-Design stabil) |
-| **M4b: Enterprise Release** | Helm Chart (✅), OpenAPI-Doku (✅), Metrics (✅) | 🟢 Kern abgeschlossen — nur 4.6 Multi-Doc-Templates offen |
+|| **M4b: Enterprise Release** | Helm Chart (✅), OpenAPI-Doku (✅), Metrics (✅), Multi-Doc-Templates (✅) | 🟢 **Abgeschlossen 26.08.2026** |
 
 > **Korifi-Hinweis:** v0.18.0 leitet OSB-Update-PATCHes nicht weiter —
 > siehe „Bekannte Plattform-Limitation" oben.
